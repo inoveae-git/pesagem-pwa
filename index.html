@@ -49,13 +49,7 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
-
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-
-</head>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f172a"></head>
 <body>
 
 <div class="config-panel">
@@ -301,12 +295,19 @@
 </script>
 
 <script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
-    });
-}
+// MELHORIA DE VOZ DECIMAL
+recognition.onresult = (event) => {
+ let fala = event.results[0][0].transcript.toLowerCase().trim();
+ const mapa={zero:'0',um:'1',uma:'1',dois:'2',três:'3',tres:'3',quatro:'4',cinco:'5',seis:'6',sete:'7',oito:'8',nove:'9',dez:'10',vinte:'20',trinta:'30'};
+ Object.keys(mapa).forEach(p=>fala=fala.replace(new RegExp('\\b'+p+'\\b','g'),mapa[p]));
+ fala=fala.replace(/ ponto /g,'.').replace(/ vírgula /g,'.').replace(/ virgula /g,'.').replace(/\s+/g,'');
+ const m=fala.match(/\d+(\.\d+)?/); const valor=m?parseFloat(m[0]):NaN;
+ if(!isNaN(valor)) registrarValor(valor);
+};
+function entrarOperador(){const n=prompt('Nome do operador')||'Operador'; localStorage.setItem('operador_nome',n);}
+function compartilharWhatsApp(texto){window.open('https://wa.me/?text='+encodeURIComponent(texto||'Relatório finalizado'),'_blank');}
+window.firebaseSyncConfig={apiKey:'',authDomain:'',projectId:''};
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 </script>
-
 </body>
 </html>
