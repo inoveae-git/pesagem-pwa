@@ -49,6 +49,10 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
 </head>
 <body>
 
@@ -88,8 +92,8 @@
 <div id="tabelas-container" class="grid-container"></div>
 
 <div class="history-section">
-    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">HISTÓRICO DE FECHAMENTOS</h4>
-    <div id="history-list"></div>
+    <h4 onclick="toggleHistorico()" style="margin:0; color: var(--gold); font-size:0.9rem; text-align:center; cursor:pointer;">📂 HISTÓRICO DE FECHAMENTOS</h4>
+    <div id="history-list" style="display:none; margin-top:10px;"></div>
 </div>
 
 <script>
@@ -234,10 +238,10 @@
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
-        doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
+        const dataNome=dataStr.replace(/\//g,'-'); const horaNome=horaStr.replace(':','-'); const nomeArquivo=`${dest.replace(/\s+/g,'_')}_${dataNome}_${horaNome}.pdf`; doc.save(nomeArquivo);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
-        if(confirm("Limpar tela para nova pesagem?")) resetar();
+        resetar();
     }
 
     function salvarNoHistorico(dest, total, data, hora, bDados, precos) {
@@ -306,7 +310,23 @@ function toggleHistorico() {
   const hist = document.getElementById('history-list');
   if (hist) hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
 }
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+// duplicidade com confirmação robusta
+const _registrarOriginal = typeof registrarValor === 'function' ? registrarValor : null;
+if (_registrarOriginal) {
+  registrarValor = function(v, confirmado=false){
+    const ultima = dados[catAtiva].lista[dados[catAtiva].lista.length-1];
+    if(!confirmado && ultima !== undefined && Number(v)===Number(ultima)){
+      aguardandoConfirmacao = Number(v);
+      setBotaoEstado('repetido');
+      document.getElementById('display').innerText='REPETIR '+Number(v).toFixed(2)+'?';
+      return;
+    }
+    _registrarOriginal(Number(v));
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
 </script>
 
 </body>
