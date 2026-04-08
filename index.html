@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero">---</div>
+    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -88,8 +88,8 @@
 <div id="tabelas-container" class="grid-container"></div>
 
 <div class="history-section">
-    <h4 onclick="toggleHistorico()" style="margin:0; color: var(--gold); font-size:0.9rem; text-align:center; cursor:pointer;">📂 HISTÓRICO DE FECHAMENTOS</h4>
-    <div id="history-list" style="display:none; margin-top:10px;"></div>
+    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">HISTÓRICO DE FECHAMENTOS</h4>
+    <div id="history-list"></div>
 </div>
 
 <script>
@@ -295,13 +295,18 @@
 </script>
 
 <script>
+function digitarManual() {
+  const entrada = prompt('Digite o peso em kg:');
+  if (!entrada) return;
+  const valor = parseFloat(String(entrada).replace(',', '.').trim());
+  if (!isNaN(valor)) registrarValor(valor);
+  else alert('Valor inválido');
+}
 function toggleHistorico() {
   const hist = document.getElementById('history-list');
-  hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
+  if (hist) hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
 }
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
-}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 </script>
 
 </body>
