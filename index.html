@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero">---</div>
+    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -88,8 +88,8 @@
 <div id="tabelas-container" class="grid-container"></div>
 
 <div class="history-section">
-    <h4 onclick="toggleHistorico()" style="margin:0; color: var(--gold); font-size:0.9rem; text-align:center; cursor:pointer;">📂 HISTÓRICO DE FECHAMENTOS</h4>
-    <div id="history-list" style="display:none; margin-top:10px;"></div>
+    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">HISTÓRICO DE FECHAMENTOS</h4>
+    <div id="history-list"></div>
 </div>
 
 <script>
@@ -199,6 +199,7 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a5' });
         let totalGeral = 0;
+        let pesoTotalGeral = 0;
         let startX = 10;
         const nomesExtenso = { Dt: "DIANTEIRO", Tz: "TRAZEIRO", Pa: "PA" };
 
@@ -208,6 +209,7 @@
         for (let cat in dados) {
             if (dados[cat].lista.length === 0) continue;
             let somaKg = dados[cat].lista.reduce((a, b) => a + b, 0);
+            pesoTotalGeral += somaKg;
             let subtotal = somaKg * precos[cat];
             totalGeral += subtotal;
 
@@ -233,7 +235,8 @@
         }
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
+        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
+        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 142);
         doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
@@ -295,10 +298,18 @@
 </script>
 
 <script>
-function toggleHistorico() {
-  const hist = document.getElementById('history-list');
-  if (!hist) return;
-  hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
+function digitarManual() {
+  const entrada = prompt('Digite o peso em kg:');
+  if (!entrada) return;
+  const valor = parseFloat(String(entrada).replace(',', '.').trim());
+  if (!isNaN(valor)) {
+    registrarValor(valor);
+  } else {
+    alert('Valor inválido');
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
 }
 </script>
 
