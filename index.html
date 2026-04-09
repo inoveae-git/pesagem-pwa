@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero">---</div>
+    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -199,6 +199,7 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a5' });
         let totalGeral = 0;
+        let pesoTotalGeral = 0;
         let startX = 10;
         const nomesExtenso = { Dt: "DIANTEIRO", Tz: "TRAZEIRO", Pa: "PA" };
 
@@ -208,6 +209,7 @@
         for (let cat in dados) {
             if (dados[cat].lista.length === 0) continue;
             let somaKg = dados[cat].lista.reduce((a, b) => a + b, 0);
+            pesoTotalGeral += somaKg;
             let subtotal = somaKg * precos[cat];
             totalGeral += subtotal;
 
@@ -233,11 +235,9 @@
         }
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
-        const dataNome = dataStr.replace(/\//g, '-');
-        const horaNome = horaStr.replace(':', '-');
-        const nomeArquivo = `${dest.replace(/\s+/g,'_')}_${dataNome}_${horaNome}.pdf`;
-        doc.save(nomeArquivo);
+        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
+        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 142);
+        doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
         if(confirm("Limpar tela para nova pesagem?")) resetar();
@@ -296,5 +296,22 @@
     function corrigirUltimo() { if(dados[catAtiva].lista.length > 0) { dados[catAtiva].lista.pop(); renderizar(); } }
     recognition.onend = () => { if(!isTravaAtiva && aguardandoConfirmacao === null) setBotaoEstado('espera'); };
 </script>
+
+<script>
+function digitarManual() {
+  const entrada = prompt('Digite o peso em kg:');
+  if (!entrada) return;
+  const valor = parseFloat(String(entrada).replace(',', '.').trim());
+  if (!isNaN(valor)) {
+    registrarValor(valor);
+  } else {
+    alert('Valor inválido');
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+
 </body>
 </html>
