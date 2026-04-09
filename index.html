@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero">---</div>
+    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -300,6 +300,9 @@ function toggleHistorico() {
   if (hist) {
     hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
   }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
 }
 </script>
 
