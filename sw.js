@@ -1,1 +1,1 @@
-const CACHE_NAME='pesagem-v9';self.addEventListener('fetch',e=>{});
+const CACHE_NAME='pesagem-v10';self.addEventListener('fetch', event => {});
