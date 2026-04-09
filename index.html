@@ -4,330 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Pesagem Profissional</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
-    <style>
-        :root { --bg: #0f172a; --card: #1e293b; --primary: #3b82f6; --success: #22c55e; --danger: #ef4444; --text: #f8fafc; --gold: #f59e0b; --warn: #fbbf24; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; }
-        
-        .config-panel { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--primary); }
-        .config-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
-        .input-std { background: #0f172a; color: white; border: 1px solid #334155; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        
-        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; font-size: 0.7rem; }
-        .stat-item { background: #000; padding: 5px; border-radius: 5px; border: 1px solid #334155; text-align: center; }
-        .stat-item b { color: var(--gold); display: block; font-size: 0.9rem; }
-
-        .dashboard { background: var(--card); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 10px; border: 1px solid #334155; position: sticky; top: 0; z-index: 10; }
-        .selector { display: flex; gap: 5px; margin-bottom: 10px; }
-        .selector button { flex: 1; padding: 12px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: bold; }
-        .selector button.active { background: var(--gold); color: #000; border: 2px solid white; }
-
-        .display-numero { font-family: monospace; font-size: 2.2rem; color: var(--success); background: #000; padding: 10px; border-radius: 8px; border: 2px solid #334155; margin-bottom: 10px; min-height: 50px; }
-        
-        .btn-voz { padding: 20px; border-radius: 12px; font-size: 1rem; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; margin-bottom: 10px; width: 100%; transition: 0.2s; }
-        .estado-espera { background: var(--primary); color: white; }
-        .estado-ouvindo { background: var(--danger); color: white; animation: blink 0.6s infinite; }
-        .estado-registrado { background: #1d4ed8; color: white; border: 2px solid var(--success); }
-        .estado-repetido { background: var(--warn); color: #000; border: 3px solid white; animation: pulse 0.5s infinite; }
-
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-undo { background: #64748b; color: white; border: none; border-radius: 8px; height: 50px; cursor: pointer; }
-        .btn-finish { background: var(--success); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        .history-section { margin-top: 20px; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #334155; }
-        .history-item { font-size: 0.75rem; padding: 10px; border-bottom: 1px solid #222; }
-        .history-actions { display: flex; gap: 15px; margin-top: 8px; }
-        .btn-h-reopen { color: var(--primary); cursor: pointer; font-weight: bold; }
-        .btn-h-del { color: var(--danger); cursor: pointer; font-weight: bold; }
-
-        .grid-container { display: flex; flex-direction: column-reverse; gap: 8px; align-items: center; margin-top: 10px; }
-        .table-wrapper { background: var(--card); padding: 5px; border-radius: 5px; width: 160px; border: 1px solid #444; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-    </style>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
-<meta name="mobile-web-app-capable" content="yes">
 </head>
 <body>
+    <!-- mantenha seu HTML visual atual -->
 
-<div class="config-panel">
-    <label style="font-size: 0.8rem; color: var(--gold);">DESTINATÁRIO:</label>
-    <input type="text" id="destinatario" class="input-std" placeholder="Nome do Cliente">
-    
-    <div class="config-grid">
-        <div><label style="font-size: 0.7rem;">R$ DIANT.</label><input type="number" id="price-Dt" class="input-std" value="1.00" step="0.01"></div>
-        <div><label style="font-size: 0.7rem;">R$ TRAZ.</label><input type="number" id="price-Tz" class="input-std" value="1.00" step="0.01"></div>
-        <div><label style="font-size: 0.7rem;">R$ PA</label><input type="number" id="price-Pa" class="input-std" value="1.00" step="0.01"></div>
-    </div>
-</div>
+    <script>
+    function digitarManual() {
+        const entrada = prompt('Digite o peso em kg:');
+        if (!entrada) return;
+        const valor = parseFloat(String(entrada).replace(',', '.').trim());
+        if (!isNaN(valor)) registrarValor(valor);
+    }
 
-<div class="stats-bar">
-    <div class="stat-item">Diant. (<span id="it-Dt">0</span>) <b id="cnt-Dt">0.00</b></div>
-    <div class="stat-item">Traz. (<span id="it-Tz">0</span>) <b id="cnt-Tz">0.00</b></div>
-    <div class="stat-item">Pa (<span id="it-Pa">0</span>) <b id="cnt-Pa">0.00</b></div>
-</div>
+    function toggleHistorico() {
+        const hist = document.getElementById('history-list');
+        if (hist) {
+            hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
+        }
+    }
 
-<div class="dashboard">
-    <div class="selector">
-        <button id="btn-Dt" onclick="mudarCategoria('Dt')">Diant.</button>
-        <button id="btn-Tz" onclick="mudarCategoria('Tz')">Traz.</button>
-        <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
-    </div>
+    function registrarValor(v, confirmado = false) {
+        const valor = Number(v);
+        const ultima = dados[catAtiva].lista[dados[catAtiva].lista.length - 1];
 
-    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
-    <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
-    
-    <div class="controls">
-        <button class="btn-undo" onclick="corrigirUltimo()">⬅️ APAGAR</button>
-        <button class="btn-finish" onclick="finalizarEGerar()">✅ FINALIZAR E SALVAR</button>
-    </div>
-</div>
+        if (!confirmado && ultima !== undefined && valor === Number(ultima)) {
+            aguardandoConfirmacao = valor;
+            setBotaoEstado('repetido');
+            document.getElementById('display').innerText = 'REPETIR ' + valor.toFixed(2) + '?';
+            return;
+        }
 
-<div id="tabelas-container" class="grid-container"></div>
-
-<div class="history-section">
-    <h4 onclick="toggleHistorico()" style="margin:0; color: var(--gold); font-size:0.9rem; text-align:center; cursor:pointer;">📂 HISTÓRICO DE FECHAMENTOS</h4>
-    <div id="history-list" style="display:none; margin-top:10px;"></div>
-</div>
-
-<script>
-    let dados = { Dt: { lista: [] }, Tz: { lista: [] }, Pa: { lista: [] } };
-    let catAtiva = 'Dt';
-    let isTravaAtiva = false;
-    let aguardandoConfirmacao = null;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    window.onload = () => { atualizarListaHistorico(); mudarCategoria('Dt'); };
-
-    function mudarCategoria(cat) {
-        catAtiva = cat;
-        document.querySelectorAll('.selector button').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + cat).classList.add('active');
+        dados[catAtiva].lista.push(valor);
+        document.getElementById('display').innerText = valor.toFixed(2) + ' kg';
         renderizar();
+        aguardandoConfirmacao = null;
     }
-
-    function tocarBip(freq = 1200) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'pt-BR';
-    recognition.continuous = false;
 
     function gerenciarCliqueVoz() {
-        if (aguardandoConfirmacao !== null) { registrarValor(aguardandoConfirmacao); } 
-        else { try { recognition.start(); setBotaoEstado('ouvindo'); } catch(e){} }
-    }
-
-    recognition.onresult = (event) => {
-        if (isTravaAtiva) return;
-        let fala = event.results[0][0].transcript.toLowerCase().trim();
-        
-        // CORREÇÕES FONÉTICAS E COMANDO "NO"
-        fala = fala.replace(/\sno\s/g, '.');
-        fala = fala.replace(/trinta/g, '30');
-        fala = fala.replace(/vinte/g, '20');
-        fala = fala.replace(/ponto/g, '.');
-        fala = fala.replace(/vírgula/g, '.');
-
-        const valor = parseFloat(fala.replace(',', '.').replace(/[^\d.-]/g, ''));
-        
-        if (!isNaN(valor)) {
-            const ultima = dados[catAtiva].lista[dados[catAtiva].lista.length - 1];
-            if (valor === ultima) {
-                aguardandoConfirmacao = valor;
-                setBotaoEstado('repetido');
-                tocarBip(600);
-                document.getElementById('display').innerText = "REPETIR " + valor.toFixed(2) + "?";
-            } else { registrarValor(valor); }
+        if (aguardandoConfirmacao !== null) {
+            registrarValor(aguardandoConfirmacao, true);
+            return;
         }
-    };
-
-    function registrarValor(v) {
-        isTravaAtiva = true;
-        dados[catAtiva].lista.push(v);
-        document.getElementById('display').innerText = v.toFixed(2) + " kg";
-        tocarBip(1200);
-        renderizar();
-        setBotaoEstado('registrado');
-        aguardandoConfirmacao = null;
-        setTimeout(() => { isTravaAtiva = false; setBotaoEstado('espera'); }, 2000);
-    }
-
-    function renderizar() {
-        const container = document.getElementById('tabelas-container');
-        container.innerHTML = '';
-        for (let cat in dados) { 
-            let soma = dados[cat].lista.reduce((a, b) => a + b, 0);
-            document.getElementById('cnt-' + cat).innerText = soma.toFixed(2);
-            document.getElementById('it-' + cat).innerText = dados[cat].lista.length;
-        }
-        const nomesExibicao = {Dt: "Dianteiro", Tz: "Trazeiro", Pa: "Pa"};
-        const lista = dados[catAtiva].lista;
-        for (let i = 0; i < lista.length; i += 10) {
-            const wrap = document.createElement('div');
-            wrap.className = 'table-wrapper';
-            wrap.innerHTML = `<b>${nomesExibicao[catAtiva]}</b><table>` + 
-                lista.slice(i, i + 10).map((n, idx) => `<tr><td>#${i+idx+1}</td><td>${n.toFixed(2)}</td></tr>`).join('') + `</table>`;
-            container.appendChild(wrap);
-        }
+        recognition.start();
     }
 
     function finalizarEGerar() {
-        const temDados = Object.values(dados).some(cat => cat.lista.length > 0);
-        if (!temDados) return alert("Erro: Não há dados para finalizar.");
-
-        const dest = document.getElementById('destinatario').value || "SEM NOME";
-        const precos = {
-            Dt: parseFloat(document.getElementById('price-Dt').value) || 0,
-            Tz: parseFloat(document.getElementById('price-Tz').value) || 0,
-            Pa: parseFloat(document.getElementById('price-Pa').value) || 0
-        };
-
-        const agora = new Date();
-        const dataStr = agora.toLocaleDateString('pt-BR');
-        const horaStr = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a5' });
         let totalGeral = 0;
-        let startX = 10;
-        const nomesExtenso = { Dt: "DIANTEIRO", Tz: "TRAZEIRO", Pa: "PA" };
-
-        doc.setFontSize(14); doc.text("RELATÓRIO DE PESAGEM", 105, 12, {align:"center"});
-        doc.setFontSize(10); doc.text(`DESTINATÁRIO: ${dest.toUpperCase()} | DATA: ${dataStr} ${horaStr}`, 105, 18, {align:"center"});
+        let pesoTotalGeral = 0;
 
         for (let cat in dados) {
-            if (dados[cat].lista.length === 0) continue;
             let somaKg = dados[cat].lista.reduce((a, b) => a + b, 0);
-            let subtotal = somaKg * precos[cat];
-            totalGeral += subtotal;
-
-            doc.setFontSize(9); doc.setFont("helvetica", "bold");
-            doc.text(nomesExtenso[cat], startX, 25);
-
-            doc.autoTable({
-                startY: 27, margin: { left: startX }, tableWidth: 25,
-                body: dados[cat].lista.map(n => [n.toFixed(2)]),
-                theme: 'grid', styles: { fontSize: 8, cellPadding: 1, halign: 'center' }
-            });
-
-            let fY = doc.lastAutoTable.finalY + 4;
-            doc.setFontSize(7); doc.setFont("helvetica", "normal");
-            doc.text(`ITENS: ${dados[cat].lista.length}`, startX, fY);
-            doc.text(`PESO: ${somaKg.toFixed(2)} kg`, startX, fY + 3);
-            doc.setFont("helvetica", "bold");
-            doc.text(`VALOR: R$ ${subtotal.toFixed(2)}`, startX, fY + 6);
-            doc.setFont("helvetica", "italic");
-            doc.text(`PREÇO: R$ ${precos[cat].toFixed(2)}`, startX, fY + 9);
-
-            startX += 40; // Espaçamento entre colunas
+            pesoTotalGeral += somaKg;
         }
 
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
-        const dataNome=dataStr.replace(/\//g,'-'); const horaNome=horaStr.replace(':','-'); const nomeArquivo=`${dest.replace(/\s+/g,'_')}_${dataNome}_${horaNome}.pdf`; doc.save(nomeArquivo);
+        const agora = new Date();
+        const dataNome = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const horaNome = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(':', '-');
+        const dest = document.getElementById('destinatario').value || 'SEM_NOME';
 
-        salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 280);
+        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 287);
+
+        const nomeArquivo = `${dest}_${dataNome}_${horaNome}.pdf`;
+        doc.save(nomeArquivo);
         resetar();
     }
 
-    function salvarNoHistorico(dest, total, data, hora, bDados, precos) {
-        let hist = JSON.parse(localStorage.getItem('pesagem_hist') || '[]');
-        hist.unshift({ id: Date.now(), dest, total, data, hora, bDados, precos });
-        localStorage.setItem('pesagem_hist', JSON.stringify(hist.slice(0, 10)));
-        atualizarListaHistorico();
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
     }
-
-    function atualizarListaHistorico() {
-        const hist = JSON.parse(localStorage.getItem('pesagem_hist') || '[]');
-        document.getElementById('history-list').innerHTML = hist.map(h => `
-            <div class="history-item">
-                <b>${h.dest}</b> - R$ ${h.total.toFixed(2)} (${h.data})
-                <div class="history-actions">
-                    <span class="btn-h-reopen" onclick="reabrir(${h.id})">REABRIR</span>
-                    <span class="btn-h-del" onclick="excluir(${h.id})">EXCLUIR</span>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function reabrir(id) {
-        if(!confirm("Substituir dados atuais?")) return;
-        const h = JSON.parse(localStorage.getItem('pesagem_hist')).find(x => x.id === id);
-        dados = h.bDados;
-        document.getElementById('destinatario').value = h.dest;
-        document.getElementById('price-Dt').value = h.precos.Dt;
-        document.getElementById('price-Tz').value = h.precos.Tz;
-        document.getElementById('price-Pa').value = h.precos.Pa;
-        renderizar();
-        window.scrollTo(0,0);
-    }
-
-    function excluir(id) {
-        let hist = JSON.parse(localStorage.getItem('pesagem_hist')).filter(x => x.id !== id);
-        localStorage.setItem('pesagem_hist', JSON.stringify(hist));
-        atualizarListaHistorico();
-    }
-
-    function resetar() {
-        dados = { Dt: { lista: [] }, Tz: { lista: [] }, Pa: { lista: [] } };
-        document.getElementById('destinatario').value = "";
-        renderizar();
-    }
-
-    function setBotaoEstado(e) {
-        const b = document.getElementById('btnVoz');
-        b.className = "btn-voz " + (e === 'ouvindo' ? 'estado-ouvindo' : e === 'repetido' ? 'estado-repetido' : e === 'registrado' ? 'estado-registrado' : 'estado-espera');
-        b.innerText = e === 'ouvindo' ? "🔴 OUVINDO..." : e === 'repetido' ? "⚠️ REPETIR?" : e === 'registrado' ? "🔵 SALVO" : "🎤 INICIAR MICROFONE";
-    }
-
-    function corrigirUltimo() { if(dados[catAtiva].lista.length > 0) { dados[catAtiva].lista.pop(); renderizar(); } }
-    recognition.onend = () => { if(!isTravaAtiva && aguardandoConfirmacao === null) setBotaoEstado('espera'); };
-</script>
-
-<script>
-function digitarManual() {
-  const entrada = prompt('Digite o peso em kg:');
-  if (!entrada) return;
-  const valor = parseFloat(String(entrada).replace(',', '.').trim());
-  if (!isNaN(valor)) registrarValor(valor);
-  else alert('Valor inválido');
-}
-function toggleHistorico() {
-  const hist = document.getElementById('history-list');
-  if (hist) hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
-}
-// duplicidade com confirmação robusta
-const _registrarOriginal = typeof registrarValor === 'function' ? registrarValor : null;
-if (_registrarOriginal) {
-  registrarValor = function(v, confirmado=false){
-    const ultima = dados[catAtiva].lista[dados[catAtiva].lista.length-1];
-    if(!confirmado && ultima !== undefined && Number(v)===Number(ultima)){
-      aguardandoConfirmacao = Number(v);
-      setBotaoEstado('repetido');
-      document.getElementById('display').innerText='REPETIR '+Number(v).toFixed(2)+'?';
-      return;
-    }
-    _registrarOriginal(Number(v));
-  }
-}
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
-}
-</script>
-
+    </script>
 </body>
 </html>
