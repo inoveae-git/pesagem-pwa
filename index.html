@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero">---</div>
+    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -296,5 +296,22 @@
     function corrigirUltimo() { if(dados[catAtiva].lista.length > 0) { dados[catAtiva].lista.pop(); renderizar(); } }
     recognition.onend = () => { if(!isTravaAtiva && aguardandoConfirmacao === null) setBotaoEstado('espera'); };
 </script>
+
+<script>
+function digitarManual() {
+  const entrada = prompt('Digite o peso em kg:');
+  if (!entrada) return;
+  const valor = parseFloat(String(entrada).replace(',', '.').trim());
+  if (!isNaN(valor)) {
+    registrarValor(valor);
+  } else {
+    alert('Valor inválido');
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+
 </body>
 </html>
