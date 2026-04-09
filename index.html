@@ -1,85 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Pesagem Profissional</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Pesagem Profissional</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <!-- mantenha seu HTML visual atual -->
-
-    <script>
-    function digitarManual() {
-        const entrada = prompt('Digite o peso em kg:');
-        if (!entrada) return;
-        const valor = parseFloat(String(entrada).replace(',', '.').trim());
-        if (!isNaN(valor)) registrarValor(valor);
-    }
-
-    function toggleHistorico() {
-        const hist = document.getElementById('history-list');
-        if (hist) {
-            hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
-        }
-    }
-
-    function registrarValor(v, confirmado = false) {
-        const valor = Number(v);
-        const ultima = dados[catAtiva].lista[dados[catAtiva].lista.length - 1];
-
-        if (!confirmado && ultima !== undefined && valor === Number(ultima)) {
-            aguardandoConfirmacao = valor;
-            setBotaoEstado('repetido');
-            document.getElementById('display').innerText = 'REPETIR ' + valor.toFixed(2) + '?';
-            return;
-        }
-
-        dados[catAtiva].lista.push(valor);
-        document.getElementById('display').innerText = valor.toFixed(2) + ' kg';
-        renderizar();
-        aguardandoConfirmacao = null;
-    }
-
-    function gerenciarCliqueVoz() {
-        if (aguardandoConfirmacao !== null) {
-            registrarValor(aguardandoConfirmacao, true);
-            return;
-        }
-        recognition.start();
-    }
-
-    function finalizarEGerar() {
-        let totalGeral = 0;
-        let pesoTotalGeral = 0;
-
-        for (let cat in dados) {
-            let somaKg = dados[cat].lista.reduce((a, b) => a + b, 0);
-            pesoTotalGeral += somaKg;
-        }
-
-        const agora = new Date();
-        const dataNome = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
-        const horaNome = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(':', '-');
-        const dest = document.getElementById('destinatario').value || 'SEM_NOME';
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 280);
-        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 287);
-
-        const nomeArquivo = `${dest}_${dataNome}_${horaNome}.pdf`;
-        doc.save(nomeArquivo);
-        resetar();
-    }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js');
-    }
-    </script>
+<!-- HTML visual atual -->
+<script>
+function digitarManual(){const e=prompt('Digite o peso em kg:'); if(!e)return; const v=parseFloat(String(e).replace(',', '.').trim()); if(!isNaN(v)) registrarValor(v);}
+function toggleHistorico(){const h=document.getElementById('history-list'); if(h) h.style.display=h.style.display==='none'?'block':'none';}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
 </body>
 </html>
