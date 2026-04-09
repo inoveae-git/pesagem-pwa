@@ -8,10 +8,16 @@
   <meta name="theme-color" content="#0f172a" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    :root { --bg:#0f172a; --card:#1e293b; --gold:#f59e0b; --text:#f8fafc; }
+    :root { --bg:#0f172a; --card:#1e293b; --gold:#f59e0b; --ok:#22c55e; --warn:#fbbf24; --danger:#ef4444; --text:#f8fafc; }
     body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:10px}
     .dashboard,.config-panel,.history-section{background:var(--card);border-radius:12px;padding:12px;margin-bottom:10px}
-    .display-numero{font-size:2.2rem;background:#000;padding:12px;border-radius:8px;text-align:center;cursor:pointer}
+    .display-numero{font-size:2.2rem;background:#000;padding:12px;border-radius:8px;text-align:center;cursor:pointer;margin:10px 0}
+    .selector{display:flex;gap:8px;margin-bottom:10px}
+    .selector button{flex:1;padding:12px;border:none;border-radius:8px;background:#334155;color:#fff;font-weight:bold}
+    .grid-container{display:flex;flex-direction:column-reverse;gap:8px}
+    .table-wrapper{background:#000;padding:8px;border-radius:8px}
+    .btn-voz,.btn-finish,.btn-undo{padding:14px;border:none;border-radius:8px;width:100%;margin-top:8px;font-weight:bold}
+    .btn-voz{background:#3b82f6;color:#fff}.btn-undo{background:#64748b;color:#fff}.btn-finish{background:#22c55e;color:#fff}
   </style>
 </head>
 <body>
@@ -20,13 +26,20 @@
     <input id="destinatario" style="width:100%;padding:10px" placeholder="Nome do cliente" />
   </div>
   <div class="dashboard">
+    <div class="selector">
+      <button onclick="mudarCategoria('Dt')">Diant.</button>
+      <button onclick="mudarCategoria('Tz')">Traz.</button>
+      <button onclick="mudarCategoria('Pa')">Pa</button>
+    </div>
     <div id="display" class="display-numero" onclick="digitarManual()">---</div>
-    <button onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
-    <button onclick="finalizarEGerar()">✅ FINALIZAR E SALVAR</button>
+    <button class="btn-voz" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
+    <button class="btn-undo" onclick="corrigirUltimo()">⬅️ APAGAR</button>
+    <button class="btn-finish" onclick="finalizarEGerar()">✅ FINALIZAR E SALVAR</button>
   </div>
+  <div id="tabelas-container" class="grid-container"></div>
   <div class="history-section">
-    <h4 onclick="toggleHistorico()" style="cursor:pointer;color:#f59e0b">📂 HISTÓRICO DE FECHAMENTOS</h4>
-    <div id="history-list" style="display:none"></div>
+    <h4 onclick="toggleHistorico()" style="margin:0;cursor:pointer;color:#f59e0b">📂 HISTÓRICO DE FECHAMENTOS</h4>
+    <div id="history-list" style="display:none;margin-top:10px"></div>
   </div>
 <script>
 let dados={Dt:{lista:[]},Tz:{lista:[]},Pa:{lista:[]}};
@@ -34,23 +47,23 @@ let catAtiva='Dt', aguardandoConfirmacao=null;
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 if(recognition){recognition.lang='pt-BR';}
+function mudarCategoria(cat){catAtiva=cat;renderizar();}
 function digitarManual(){const e=prompt('Digite o peso em kg:'); if(!e)return; const v=parseFloat(String(e).replace(',', '.')); if(!isNaN(v)) registrarValor(v);}
 function toggleHistorico(){const h=document.getElementById('history-list'); h.style.display=h.style.display==='none'?'block':'none';}
 function registrarValor(v, confirmado=false){
- const valor=Number(v);
- const ultima=dados[catAtiva].lista[dados[catAtiva].lista.length-1];
+ const valor=Number(v), ultima=dados[catAtiva].lista[dados[catAtiva].lista.length-1];
  if(!confirmado && ultima!==undefined && valor===Number(ultima)){aguardandoConfirmacao=valor; display.innerText='REPETIR '+valor.toFixed(2)+'?'; return;}
- dados[catAtiva].lista.push(valor); aguardandoConfirmacao=null; display.innerText=valor.toFixed(2)+' kg';
+ dados[catAtiva].lista.push(valor); aguardandoConfirmacao=null; display.innerText=valor.toFixed(2)+' kg'; renderizar();
 }
 function gerenciarCliqueVoz(){ if(aguardandoConfirmacao!==null) return registrarValor(aguardandoConfirmacao,true); if(recognition) recognition.start(); }
 if(recognition){recognition.onresult=(e)=>{const t=e.results[0][0].transcript.replace(' ponto ','.').replace(',','.'); const m=t.match(/\d+(\.\d+)?/); if(m) registrarValor(parseFloat(m[0]));};}
+function corrigirUltimo(){if(dados[catAtiva].lista.length){dados[catAtiva].lista.pop(); renderizar();}}
+function renderizar(){const c=document.getElementById('tabelas-container'); c.innerHTML=dados[catAtiva].lista.map((n,i)=>`<div class='table-wrapper'>#${i+1} - ${n.toFixed(2)} kg</div>`).join('');}
 function finalizarEGerar(){
  const {jsPDF}=window.jspdf; const doc=new jsPDF();
- let pesoTotalItens=0;
- Object.keys(dados).forEach(cat=>{pesoTotalItens += dados[cat].lista.reduce((a,b)=>a+b,0);});
+ let pesoTotalItens=0; Object.keys(dados).forEach(cat=>pesoTotalItens+=dados[cat].lista.reduce((a,b)=>a+b,0));
  doc.text(`TOTAL DA PESAGEM: ${pesoTotalItens.toFixed(2)} kg`,10,20);
- const agora=new Date();
- const dest=(document.getElementById('destinatario').value||'SEM_NOME').replace(/\s+/g,'_');
+ const agora=new Date(), dest=(document.getElementById('destinatario').value||'SEM_NOME').replace(/\s+/g,'_');
  const dataNome=agora.toLocaleDateString('pt-BR').replace(/\//g,'-');
  const horaNome=agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(':','-');
  doc.save(`${dest}_${dataNome}_${horaNome}.pdf`);
