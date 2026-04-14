@@ -88,7 +88,7 @@
 <div id="tabelas-container" class="grid-container"></div>
 
 <div class="history-section">
-    <h4 onclick="toggleHistorico()" style="margin:0; color: var(--gold); font-size:0.9rem; text-align:center; cursor:pointer;">📂 HISTÓRICO DE FECHAMENTOS</h4>
+    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">HISTÓRICO DE FECHAMENTOS</h4>
     <div id="history-list" style="display:none; margin-top:10px;"></div>
 </div>
 
@@ -235,9 +235,9 @@
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
         const agora = new Date();
-        const dataNome = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
-        const horaNome = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(':', '-');
-        const nomeArquivo = `${dest.replace(/\s+/g,'_')}_${dataNome}_${horaNome}.pdf`;
+        const dataNome = agora.toLocaleDateString('pt-BR').replace(/\\//g, '-');
+        const horaNome = agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }).replace(':', '-');
+        const nomeArquivo = `${dest.replace(/\\s+/g,'_')}_${dataNome}_${horaNome}.pdf`;
         doc.save(nomeArquivo);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
