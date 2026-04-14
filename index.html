@@ -296,5 +296,54 @@
     function corrigirUltimo() { if(dados[catAtiva].lista.length > 0) { dados[catAtiva].lista.pop(); renderizar(); } }
     recognition.onend = () => { if(!isTravaAtiva && aguardandoConfirmacao === null) setBotaoEstado('espera'); };
 </script>
+
+<script>
+// ⌨️ DIGITAÇÃO MANUAL
+function digitarManual() {
+    const entrada = prompt('Digite o peso em kg:');
+    if (!entrada) return;
+    const valor = parseFloat(String(entrada).replace(',', '.').trim());
+    if (!isNaN(valor)) {
+        registrarValor(valor);
+    } else {
+        alert('Valor inválido');
+    }
+}
+
+// 🎤 MICROFONE
+function gerenciarCliqueVoz() {
+    if (typeof aguardandoConfirmacao !== 'undefined' && aguardandoConfirmacao !== null) {
+        registrarValor(aguardandoConfirmacao, true);
+        return;
+    }
+    try {
+        if (window.webkitSpeechRecognition || window.SpeechRecognition) {
+            recognition.start();
+            if (typeof setBotaoEstado === 'function') setBotaoEstado('ouvindo');
+        } else {
+            digitarManual();
+        }
+    } catch (e) {
+        digitarManual();
+    }
+}
+
+// 📂 HISTÓRICO
+function toggleHistorico() {
+    const hist = document.getElementById('history-list');
+    if (!hist) return;
+    hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
+}
+
+// 🔗 REAPLICA EVENTOS NO ANDROID
+window.addEventListener('load', () => {
+    const display = document.getElementById('display');
+    if (display) display.onclick = digitarManual;
+
+    const histTitle = document.querySelector('.history-section h4');
+    if (histTitle) histTitle.onclick = toggleHistorico;
+});
+</script>
+
 </body>
 </html>
