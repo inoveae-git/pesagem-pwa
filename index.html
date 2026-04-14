@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
+    <div id="display" class="display-numero">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -295,6 +295,7 @@
 </script>
 
 <script>
+// ⌨️ DIGITAÇÃO MANUAL
 function digitarManual() {
     const entrada = prompt('Digite o peso em kg:');
     if (!entrada) return;
@@ -306,12 +307,12 @@ function digitarManual() {
     }
 }
 
+// 🎤 MICROFONE
 function gerenciarCliqueVoz() {
     if (typeof aguardandoConfirmacao !== 'undefined' && aguardandoConfirmacao !== null) {
         registrarValor(aguardandoConfirmacao, true);
         return;
     }
-
     try {
         if (window.webkitSpeechRecognition || window.SpeechRecognition) {
             recognition.start();
@@ -323,6 +324,22 @@ function gerenciarCliqueVoz() {
         digitarManual();
     }
 }
+
+// 📂 HISTÓRICO
+function toggleHistorico() {
+    const hist = document.getElementById('history-list');
+    if (!hist) return;
+    hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
+}
+
+// 🔗 REAPLICA EVENTOS NO ANDROID
+window.addEventListener('load', () => {
+    const display = document.getElementById('display');
+    if (display) display.onclick = digitarManual;
+
+    const histTitle = document.querySelector('.history-section h4');
+    if (histTitle) histTitle.onclick = toggleHistorico;
+});
 </script>
 
 </body>
