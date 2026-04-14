@@ -49,6 +49,14 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pesagem">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 </head>
 <body>
 
@@ -88,7 +96,7 @@
 <div id="tabelas-container" class="grid-container"></div>
 
 <div class="history-section">
-    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">📂 HISTÓRICO DE FECHAMENTOS</h4>
+    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">HISTÓRICO DE FECHAMENTOS</h4>
     <div id="history-list" style="display:none; margin-top:10px;"></div>
 </div>
 
@@ -237,7 +245,8 @@
         const agora = new Date();
         const dataNome = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
         const horaNome = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(':', '-');
-        const nomeArquivo = `${dest.replace(/\s+/g,'_')}_${dataNome}_${horaNome}.pdf`;
+        const nomeBase = (typeof dest !== 'undefined' ? dest : 'SEM_NOME');
+        const nomeArquivo = `${nomeBase.replace(/\s+/g,'_')}_${dataNome}_${horaNome}.pdf`;
         doc.save(nomeArquivo);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
@@ -299,31 +308,61 @@
 </script>
 
 <script>
+function isIOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent);}
+
 function digitarManual() {
-    const entrada = prompt('Digite o peso em kg:');
-    if (!entrada) return;
-    const valor = parseFloat(String(entrada).replace(',', '.').trim());
-    if (!isNaN(valor)) registrarValor(valor);
-    else alert('Valor inválido');
+  const entrada = prompt('Digite o peso em kg:');
+  if (!entrada) return;
+  const valor = parseFloat(String(entrada).replace(',', '.').trim());
+  if (!isNaN(valor)) {
+    if (typeof registrarValor === 'function') registrarValor(valor);
+  } else {
+    alert('Valor inválido');
+  }
 }
+
 function toggleHistorico() {
-    const hist = document.getElementById('history-list');
-    if (!hist) return;
-    hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
+  const hist = document.getElementById('history-list');
+  if (!hist) return;
+  hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
 }
-window.addEventListener('load', () => {
-    const display = document.getElementById('display');
-    if (display) display.onclick = digitarManual;
 
-    const hist = document.getElementById('history-list');
-    if (hist && !hist.style.display) hist.style.display = 'none';
-
-    const histTitle = document.querySelector('.history-section h4, h4');
-    if (histTitle && histTitle.innerText.includes('HISTÓRICO')) {
-        histTitle.onclick = toggleHistorico;
-        histTitle.style.cursor = 'pointer';
+function gerenciarCliqueVoz() {
+  try {
+    if (typeof aguardandoConfirmacao !== 'undefined' && aguardandoConfirmacao !== null) {
+      registrarValor(aguardandoConfirmacao, true);
+      return;
     }
+    if (isIOS()) { digitarManual(); return; }
+    if (window.webkitSpeechRecognition || window.SpeechRecognition) {
+      recognition.start();
+      if (typeof setBotaoEstado === 'function') setBotaoEstado('ouvindo');
+    } else {
+      digitarManual();
+    }
+  } catch(e) {
+    digitarManual();
+  }
+}
+
+window.addEventListener('load', () => {
+  const display = document.getElementById('display');
+  if (display) display.onclick = digitarManual;
+
+  const histTitle = document.querySelector('.history-section h4, h4');
+  if (histTitle && histTitle.innerText.includes('HISTÓRICO')) {
+    histTitle.onclick = toggleHistorico;
+    histTitle.style.cursor = 'pointer';
+  }
+
+  const btnMic = document.getElementById('voice-btn');
+  if (btnMic) btnMic.onclick = gerenciarCliqueVoz;
+
+  const hist = document.getElementById('history-list');
+  if (hist && !hist.style.display) hist.style.display = 'none';
 });
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 </script>
 
 </body>
