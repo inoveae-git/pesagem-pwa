@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
+    <div id="display" class="display-numero">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -88,8 +88,8 @@
 <div id="tabelas-container" class="grid-container"></div>
 
 <div class="history-section">
-    <h4 style="margin: 0 0 10px 0; color: var(--gold); font-size: 0.9rem; text-align: center;">HISTÓRICO DE FECHAMENTOS</h4>
-    <div id="history-list"></div>
+    <h4 onclick="toggleHistorico()" style="margin:0; color: var(--gold); font-size:0.9rem; text-align:center; cursor:pointer;">📂 HISTÓRICO DE FECHAMENTOS</h4>
+    <div id="history-list" style="display:none; margin-top:10px;"></div>
 </div>
 
 <script>
@@ -234,7 +234,11 @@
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
-        doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
+        const agora = new Date();
+        const dataNome = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const horaNome = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', '-');
+        const nomeArquivo = `${dest.replace(/\s+/g, '_')}_${horaNome}_${dataNome}.pdf`;
+        doc.save(nomeArquivo);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
         if(confirm("Limpar tela para nova pesagem?")) resetar();
@@ -295,33 +299,10 @@
 </script>
 
 <script>
-function digitarManual() {
-    const entrada = prompt('Digite o peso em kg:');
-    if (!entrada) return;
-    const valor = parseFloat(String(entrada).replace(',', '.').trim());
-    if (!isNaN(valor)) {
-        registrarValor(valor);
-    } else {
-        alert('Valor inválido');
-    }
-}
-
-function gerenciarCliqueVoz() {
-    if (typeof aguardandoConfirmacao !== 'undefined' && aguardandoConfirmacao !== null) {
-        registrarValor(aguardandoConfirmacao, true);
-        return;
-    }
-
-    try {
-        if (window.webkitSpeechRecognition || window.SpeechRecognition) {
-            recognition.start();
-            if (typeof setBotaoEstado === 'function') setBotaoEstado('ouvindo');
-        } else {
-            digitarManual();
-        }
-    } catch (e) {
-        digitarManual();
-    }
+function toggleHistorico() {
+    const hist = document.getElementById('history-list');
+    if (!hist) return;
+    hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
 }
 </script>
 
