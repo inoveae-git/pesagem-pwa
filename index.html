@@ -237,7 +237,10 @@
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
         doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 142);
-        doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
+        const nomeArquivo =
+    `${dest.replace(/\s+/g, '_')}_${horaStr.replace(':', '-')}_${dataStr.replace(/\//g, '-')}.pdf`;
+
+doc.save(nomeArquivo);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
         if(confirm("Limpar tela para nova pesagem?")) resetar();
