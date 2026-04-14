@@ -199,6 +199,7 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a5' });
         let totalGeral = 0;
+        let pesoTotalGeral = 0;
         let startX = 10;
         const nomesExtenso = { Dt: "DIANTEIRO", Tz: "TRAZEIRO", Pa: "PA" };
 
@@ -208,6 +209,7 @@
         for (let cat in dados) {
             if (dados[cat].lista.length === 0) continue;
             let somaKg = dados[cat].lista.reduce((a, b) => a + b, 0);
+            pesoTotalGeral += somaKg;
             let subtotal = somaKg * precos[cat];
             totalGeral += subtotal;
 
@@ -233,6 +235,7 @@
         }
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
         doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
         doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
 
@@ -293,54 +296,5 @@
     function corrigirUltimo() { if(dados[catAtiva].lista.length > 0) { dados[catAtiva].lista.pop(); renderizar(); } }
     recognition.onend = () => { if(!isTravaAtiva && aguardandoConfirmacao === null) setBotaoEstado('espera'); };
 </script>
-
-<script>
-// ⌨️ DIGITAÇÃO MANUAL
-function digitarManual() {
-    const entrada = prompt('Digite o peso em kg:');
-    if (!entrada) return;
-    const valor = parseFloat(String(entrada).replace(',', '.').trim());
-    if (!isNaN(valor)) {
-        registrarValor(valor);
-    } else {
-        alert('Valor inválido');
-    }
-}
-
-// 🎤 MICROFONE
-function gerenciarCliqueVoz() {
-    if (typeof aguardandoConfirmacao !== 'undefined' && aguardandoConfirmacao !== null) {
-        registrarValor(aguardandoConfirmacao, true);
-        return;
-    }
-    try {
-        if (window.webkitSpeechRecognition || window.SpeechRecognition) {
-            recognition.start();
-            if (typeof setBotaoEstado === 'function') setBotaoEstado('ouvindo');
-        } else {
-            digitarManual();
-        }
-    } catch (e) {
-        digitarManual();
-    }
-}
-
-// 📂 HISTÓRICO
-function toggleHistorico() {
-    const hist = document.getElementById('history-list');
-    if (!hist) return;
-    hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
-}
-
-// 🔗 REAPLICA EVENTOS NO ANDROID
-window.addEventListener('load', () => {
-    const display = document.getElementById('display');
-    if (display) display.onclick = digitarManual;
-
-    const histTitle = document.querySelector('.history-section h4');
-    if (histTitle) histTitle.onclick = toggleHistorico;
-});
-</script>
-
 </body>
 </html>
