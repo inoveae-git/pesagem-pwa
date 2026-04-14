@@ -49,6 +49,12 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pesagem">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 </head>
 <body>
 
@@ -76,7 +82,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
+    <div id="display" class="display-numero">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -199,7 +205,6 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a5' });
         let totalGeral = 0;
-        let pesoTotalGeral = 0;
         let startX = 10;
         const nomesExtenso = { Dt: "DIANTEIRO", Tz: "TRAZEIRO", Pa: "PA" };
 
@@ -209,7 +214,6 @@
         for (let cat in dados) {
             if (dados[cat].lista.length === 0) continue;
             let somaKg = dados[cat].lista.reduce((a, b) => a + b, 0);
-            pesoTotalGeral += somaKg;
             let subtotal = somaKg * precos[cat];
             totalGeral += subtotal;
 
@@ -235,8 +239,7 @@
         }
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
-        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 142);
+        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
         doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
@@ -298,18 +301,26 @@
 </script>
 
 <script>
-function digitarManual() {
-  const entrada = prompt('Digite o peso em kg:');
-  if (!entrada) return;
-  const valor = parseFloat(String(entrada).replace(',', '.').trim());
-  if (!isNaN(valor)) {
-    registrarValor(valor);
-  } else {
-    alert('Valor inválido');
-  }
+function isIOS() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent);
 }
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
+const _oldGerenciarCliqueVoz = typeof gerenciarCliqueVoz === 'function' ? gerenciarCliqueVoz : null;
+function gerenciarCliqueVoz() {
+  if (typeof aguardandoConfirmacao !== 'undefined' && aguardandoConfirmacao !== null) {
+    registrarValor(aguardandoConfirmacao, true);
+    return;
+  }
+  if (isIOS()) {
+    digitarManual();
+    return;
+  }
+  try {
+    if (_oldGerenciarCliqueVoz) _oldGerenciarCliqueVoz();
+    else if (typeof recognition !== 'undefined') recognition.start();
+    else digitarManual();
+  } catch (e) {
+    digitarManual();
+  }
 }
 </script>
 
