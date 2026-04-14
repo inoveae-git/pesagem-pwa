@@ -76,7 +76,7 @@
         <button id="btn-Pa" onclick="mudarCategoria('Pa')">Pa</button>
     </div>
 
-    <div id="display" class="display-numero">---</div>
+    <div id="display" class="display-numero" onclick="digitarManual()">---</div>
     <button id="btnVoz" class="btn-voz estado-espera" onclick="gerenciarCliqueVoz()">🎤 INICIAR MICROFONE</button>
     
     <div class="controls">
@@ -235,9 +235,14 @@
         }
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
         doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 140);
-        doc.save(`pesagem_${dest.replace(/\s/g, '_')}.pdf`);
+        const agora = new Date();
+        const dataNome = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const horaNome = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(':', '-');
+        doc.text(`PESO TOTAL GERAL: ${pesoTotalGeral.toFixed(2)} kg`, 10, 136);
+        doc.text(`VALOR TOTAL FINAL: R$ ${totalGeral.toFixed(2)}`, 10, 142);
+        const nomeArquivo = `${dest.replace(/\s+/g,'_')}_${horaNome}_${dataNome}.pdf`;
+        doc.save(nomeArquivo);
 
         salvarNoHistorico(dest, totalGeral, dataStr, horaStr, JSON.parse(JSON.stringify(dados)), precos);
         if(confirm("Limpar tela para nova pesagem?")) resetar();
@@ -296,5 +301,16 @@
     function corrigirUltimo() { if(dados[catAtiva].lista.length > 0) { dados[catAtiva].lista.pop(); renderizar(); } }
     recognition.onend = () => { if(!isTravaAtiva && aguardandoConfirmacao === null) setBotaoEstado('espera'); };
 </script>
+
+<script>
+function digitarManual() {
+    const entrada = prompt('Digite o peso em kg:');
+    if (!entrada) return;
+    const valor = parseFloat(String(entrada).replace(',', '.').trim());
+    if (!isNaN(valor)) registrarValor(valor);
+    else alert('Valor inválido');
+}
+</script>
+
 </body>
 </html>
